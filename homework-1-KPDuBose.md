@@ -6,78 +6,199 @@ Kline DuBose
 
 Tuesday, February 7
 
-# Background
+# Design 1
 
-Response-adaptive randomization (RAR) has been used in precision
-medicine trials, such as the trials
-[I-SPY-2](https://www.nejm.org/doi/pdf/10.1056/NEJMoa1513750?articleTools=true),
-[BATTLE-1](https://aacrjournals.org/cancerdiscovery/article/1/1/44/2198?casa_token=pK1gZcX-FgkAAAAA:KmsD6qnoaOMxqHJlg0VGlmqr2nqIl49Xupuh0FX7nnJXNjtdBwVWsdmVtUIXKdEWQ_e5i9pG),
-and
-[BATTLE-2](https://cdn.amegroups.cn/journals/amepc/files/journals/12/articles/6846/public/6846-PB2-R2.pdf)
-to gather early evidence of treatment arms that work best for a given
-biomarker. Throughout RAR, the treatment allocation adjusts depending on
-which treatment arm looks most promising. RAR is criticized for the
-following reasons
-[(Korn)](https://watermark.silverchair.com/djx013.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAvswggL3BgkqhkiG9w0BBwagggLoMIIC5AIBADCCAt0GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMUKqYjuX4J38OrUAJAgEQgIICrkuWgqA03alHxi4xfUz3ybPTepY21z2PaOZFRSmRgKhEf4ROr5tIP8MoeLwYxIexRpjXLTjKQ_Yn6s2oYBYUTJEG_gVqeevFGwvxyi8zas8R1GyiQWDyjnhBsjKcAsKCl6M63_K-LXEPLj7nyw4FZEefXgMSO91jz_bKseNLmhDEmZ7oPvO_xlBzWptEW4gE8I7mrv8h3NbFrM0BrbDIeOkIr36F3X-F3ip5a8lEDirZwrKyLCb598ivER1JVlr7iCzNV9OYHv6P79E6YxKGxJPDNk1WJ-ClcUb6aA87-Gae81SVipvqhu2npbLCFtWVikZKliWQ5lPE9CieOB9hnd93HLsp7Da9U3D0jodTMbk9RE28I7kzuoWHO8BEoPK8p1_1nTWw6pV5CbS02RFxtTr4-aCMm364vJAHrgP3rNmvi-KEGB4rxufA_hebdi2yS20nll2HdAVT81m_cm87x3YvVP7Ut9H-0zTCAVYACBJJUjKS7w7QKkIN-FqdQ7N7u_YJ83bl69sMF0fddIVTA6WFAJWpVmiij5ou34auXuzDtEKLN5nmQ-467HZtpMAkoyFxcyCdtI_ieuyCp1jlP3IC07JZAWvA_8A2W8hEFaRBimq0STpclvxEgt2OCDtE9kTXvS8v6ArS4U6ZkuM7Uw3PSG1ISoYAWPPvWzGMKWU4W4nCS0rT-TPWPJkPf8TGkUK9Q1cDemuYlWZBrYN-RUJ8X204vbqa-p9jsRKIfsQ0QDrW97qHYxf-659kKav288WZ8d5wmESsLKyHEc8JatY2dvmsIMIdeK3mKA68qDUqS3C1yO7X0T4BJZpJPGjjPzFrrqaLAmLdhdqITE5AcT_Eiy3upRuYw3TdqbznbDog3k2K2yIgQUZwu2HC9q_fJhqmxh0WkHQDyYeiXyqb):
+``` r
+library(data.table)
+# set.seed(1134)
 
-1.  Possible bias: Time trends in participant enrollment (example:
-    healthier participants earlier) may lead to a bias in estimating
-    which treatment is superior
-2.  Possible inefficiency: Unequal allocation may lead to statistical
-    inefficiencies compared to equal allocation
-3.  Possibly unethical: A moderately large sample size could be enrolled
-    onto an arm worse than control
+design1.fun <- function(sampleSize, alpha, beta, effective){
+  
+  delta <- 0.9912
+  numbDraws <- 100000
+  
+  equalArm <- sampleSize / 4
+  subjects <- rbinom(sampleSize, 1, effective)
+  f <- 0:3
+  allocation <- data.table::as.data.table(split(subjects, f))
+  
+  y_0 <- allocation$'0'
+  y_1 <- allocation$'1'
+  y_2 <- allocation$'2'
+  y_3 <- allocation$'3'
+  
+  # Distribution of each thing
+  p_0 <- binom.sample(numbDraws, alpha, beta, y_0)
+  p_1 <- binom.sample(numbDraws, alpha, beta, y_1)
+  p_2 <- binom.sample(numbDraws, alpha, beta, y_2)
+  p_3 <- binom.sample(numbDraws, alpha, beta, y_3)
+  
+  v_1 <- mean(p_1 > p_0)
+  v_2 <- mean(p_2 > p_0)
+  v_3 <- mean(p_3 > p_0)
+  
+  v_0 <- min(sum((v_1)*((length(y_1) + 1)/(length(y_0) + 1)),(v_2)*((length(y_2) + 1)/(length(y_0) + 1)),(v_3)*((length(y_3) + 1)/(length(y_0) + 1))), max(v_1, v_2, v_3))
+  
+  d1fv1 <<- sum(v_1, v_2, v_3)/sum(v_0, v_1, v_2, v_3)
+  d1fv2 <<- sum(v_2, v_3)/sum(v_0, v_1, v_2, v_3)
+  d1fv3 <<- sum(v_3)/sum(v_0, v_1, v_2, v_3)
+  
+  if(max(v_1, v_2, v_3) > delta){
+    print("Successful trial")
+    print(max(v_1, v_2, v_3))
+    print("Number of patients per arm")
+    print(equalArm)
+    
+  }
+  else{
+    print("Unsuccessful trial")
+    print(max(v_1, v_2, v_3))
+    print("Number of patients per arm")
+    print(equalArm)
 
-It’s not always bad for a method to be criticized – it means there are
-open questions to be addressed by new/improved methods. For example, the
-manuscript [Comparison of methods for control allocation in multiple arm
-studies using response adaptive
-randomization](https://journals.sagepub.com/doi/pdf/10.1177/1740774519877836)
-develops and compares methods to improve RAR efficiency compared to
-equal allocation by maintaining a reasonable number of participants
-allocated to the control arm.
+  
+  }}
 
-# Assignment
+binom.sample <- function(draws, alpha, beta, vecInterest){
+  rbeta(draws, shape1 = alpha + sum(vecInterest), shape2 = beta + length(vecInterest) - sum(vecInterest))
+}
+```
 
-Replicate the results in Table 2 of [Comparison of methods for control
-allocation in multiple arm studies using response adaptive
-randomization](https://journals.sagepub.com/doi/pdf/10.1177/1740774519877836)
-for the designs RMatch and F25. Use only `base` R functions and use
-functions to avoid duplicating multiple lines of code (i.e., this is
-called modularizing your code).
+# Design 2
 
-In this assignment, you will practice writing functions, loops, and
-using the \*apply functions.
+``` r
+design2.fun <- function(popSize, alpha, beta, effective, interim){
+  
+  numbDraws <- 100000
+  
+  numbIter <- popSize %/% interim + 1
+  
+  # Randomly assign subjects
+  subjects <- rbinom(popSize, 1, effective)
+  
+  iter <- rep(1:6, each = 40, length.out = 228)
+  iter <- sample(iter)
+  
+  subjects <- data.table::as.data.table(cbind(subjects, iter))
+  
+  # Initial Distribution to interim
+  equal.dist(length(subjects[iter == 1, subjects]), alpha, beta, subjects[iter == 1, subjects], draws = numbDraws)
+  
+  # Readjust "v"
+  update.v(v_1, v_2, v_3, length(y_0), length(y_1), length(y_2), length(y_3))
+  
+  # Run the analysis for the remaining arms
+  
+  for (i in 2:numbIter) {
+    # Run to get new numbers for the different arms
+    vari.dist(length(subjects[iter == i, subjects]), alpha, beta, subjects[iter == i, subjects], draws = numbDraws)
+    
+    # recalculate v for the next round of information
+    update.v(v_1, v_2, v_3, length(y2_0), length(y2_1), length(y2_2), length(y2_3))
+  }
+  
+  d2fv1 <<- sum(v_1, v_2, v_3)
+  d2fv2 <<- sum(v_2, v_3)
+  d2fv3 <<- v_3
+  
+  print(paste("V_1:", fv_1))
+  print(paste("V_2:", fv_2))
+  print(paste("V_3:", fv_3))
+  print(paste0("Number of subjects in control ", length(y_0)))
+  print(paste0("Number of subjects in arm 1 ", length(y_1)))
+  print(paste0("Number of subjects in arm 2 ", length(y_2)))
+  print(paste0("Number of subjects in arm 3 ", length(y_3)))
+}
 
-# Guidance
+update.v <- function(v1, v2, v3, n0, n1, n2, n3){
+  
+  fv_1 <<- v1
+  fv_2 <<- v2
+  fv_3 <<- v3
+  
+  v0 <- min(sum((v1)*((n1 + 1)/(n0 + 1)),(v2)*((n2 + 1)/(n0 + 1)),(v3)*((n3 + 1)/(n0 + 1))), max(v1, v2, v3))
+  
+  v_0 <<- (v0)/sum(v0, v1, v2, v3)
+  v_1 <<- (v1)/sum(v0, v1, v2, v3)
+  v_2 <<- (v2)/sum(v0, v1, v2, v3)
+  v_3 <<- (v3)/sum(v0, v1, v2, v3)
+}
 
-1.  The manuscript uses a minimally informative, normal prior for the
-    log-odds. Rather than this prior, use a Beta(0.35, 0.65) prior on
-    the response rate for each arm. This is minimally informative
-    favoring the null hypothesis and allows you to use the Beta-Binomial
-    conjugacy to obtain a Beta posterior distribution. (Refer to [lab
-    2](https://uofuepibio.github.io/PHS7045-advanced-programming/week-02-lab.html)
-    for notation of the posterior distribution).
+equal.dist <- function(sampleSize, alpha, beta, subjectVector, draws){
+  equalArm <- sampleSize / 4
+  group <- rep_len(0:3, sampleSize)
+  # group <- sample(group, sampleSize)
+  allocation <- data.table::as.data.table(cbind(subjectVector, group))
+  
+  y_0 <<- (allocation[group == 0, .(subjectVector)])$subjectVector
+  y_1 <<- (allocation[group == 1, .(subjectVector)])$subjectVector
+  y_2 <<- (allocation[group == 2, .(subjectVector)])$subjectVector
+  y_3 <<- (allocation[group == 3, .(subjectVector)])$subjectVector
+  
+  # Distribution of each thing
+  p_0 <- binom.sample(draws, alpha, beta, y_0)
+  p_1 <- binom.sample(draws, alpha, beta, y_1)
+  p_2 <- binom.sample(draws, alpha, beta, y_2)
+  p_3 <- binom.sample(draws, alpha, beta, y_3)
+  
+  v_1 <<- mean(p_1 > p_0)
+  v_2 <<- mean(p_2 > p_0)
+  v_3 <<- mean(p_3 > p_0)
+}
 
-2.  A way to estimate $P_t$(Max) is to `cbind` K = \[1000+\] draws from
-    the posterior distribution of each arm and to see how frequently
-    (across the K draws from each arm) each arm is drawn to be the
-    largest.
+vari.dist <- function(sampleSize, alpha, beta, subjectVector, draws){
+  group <- sample(0:3, sampleSize, replace = TRUE, prob = c(v_0, v_1, v_2, v_3))
+  allocation <- data.table::as.data.table(cbind(subjectVector, group))
+  
+  y2_0 <<- as.vector(allocation[group == 0, .(subjectVector)])$subjectVector
+  y2_1 <<- as.vector(allocation[group == 1, .(subjectVector)])$subjectVector
+  y2_2 <<- as.vector(allocation[group == 2, .(subjectVector)])$subjectVector
+  y2_3 <<- as.vector(allocation[group == 3, .(subjectVector)])$subjectVector
+  
+  # append the new values in each arm to the existing ones
+  y_0 <<- append(y_0, y2_0); y_1 <<- append(y_1, y2_1); y_2 <<- append(y_2, y2_2); y_3 <<- append(y_3, y2_3)
+  
+  p_0 <- binom.sample(draws, alpha, beta, y2_0)
+  p_1 <- binom.sample(draws, alpha, beta, y2_1)
+  p_2 <- binom.sample(draws, alpha, beta, y2_2)
+  p_3 <- binom.sample(draws, alpha, beta, y2_3)
+  
+  v_1 <<- mean(p_1 > p_0)
+  v_2 <<- mean(p_2 > p_0)
+  v_3 <<- mean(p_3 > p_0)
+}
+```
 
-3.  The value of $\delta$ was found through simulation under the null
-    scenario such that an efficacious trial was declared to be found
-    only 2.5% of the time. The manuscript provides values for $\delta$
-    though verify and modify as needed (there could be slight
-    differences by using a different prior).
+# Recreate Table 2
 
-4.  The manuscript uses 100K replicates to determine $\delta$ and
-    estimate the values in Table 2. Start with a small number of
-    replicates (1K or 10K) to make sure the code is running correctly
-    and your results are in the ball park of being similar to the
-    manuscript. Ramp up the number of replicates as feasible (for this
-    assignment feasible is a run time of no longer than 20 minutes).
+``` r
+design1.fun(228, 0.35, 0.65, 0.35)
+```
 
-5.  Please talk to us if you are having difficulties with this
-    assignment. We realize it is in a space that may be new to you, and
-    it is not the intent for this assignment to take more than 7-10
-    hours over the course of 2 weeks.
+    [1] "Unsuccessful trial"
+    [1] 0.72079
+    [1] "Number of patients per arm"
+    [1] 57
+
+``` r
+design2.fun(228, 0.35, 0.65, 0.35, 40)
+```
+
+    [1] "V_1: 0.90454"
+    [1] "V_2: 0.98984"
+    [1] "V_3: 0.6619"
+    [1] "Number of subjects in control 79"
+    [1] "Number of subjects in arm 1 63"
+    [1] "Number of subjects in arm 2 65"
+    [1] "Number of subjects in arm 3 21"
+
+``` r
+table2 <- matrix(c(d1fv1, d1fv2, d1fv3, d2fv1, d2fv2, d2fv3), ncol = 3, byrow = TRUE)
+colnames(table2) <- c("Pr Arm1 or Greater", "Pr Arm2 or Greater", "Pr Arm3")
+rownames(table2) <- c("F25", "RMatch")
+table2
+```
+
+           Pr Arm1 or Greater Pr Arm2 or Greater   Pr Arm3
+    F25             0.7134799          0.4839665 0.1974464
+    RMatch          0.7208668          0.4657880 0.1866547
