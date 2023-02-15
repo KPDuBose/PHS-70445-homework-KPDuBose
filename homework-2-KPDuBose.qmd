@@ -31,7 +31,6 @@ fun1 <- function(n = 100, k = 4, lambda = 4){
 # my function
 fun1alt <- function(n = 100, k = 4, lambda = 4){
   x <- matrix(data = rpois(n * k, lambda = lambda),
-              nrow = n,
               ncol = k)
   return(x)
   
@@ -48,7 +47,7 @@ bench::mark(
 Like before, speed up the following functions (it is OK to use StackOverflow)
 
 ```{r}
-#| eval: false
+
 # Total row sums
 fun1 <- function(mat) {
   n <- nrow(mat)
@@ -60,7 +59,7 @@ fun1 <- function(mat) {
 }
 
 fun1alt <- function(mat) {
-  # Insert code here
+  rowSums(mat)
 }
 
 
@@ -77,9 +76,22 @@ fun2 <- function(mat) {
   ans
 }
 
+
 fun2alt <- function(mat) {
-  # Insert code here
+  n <- nrow(mat)
+  ans <- mat
+  for (i in 1:n) {
+    ans[i,] <- cumsum(mat[i,])
+  }
+  ans
 }
+
+## Another function I'm trying to make faster
+# fun2alt <- function(mat) {
+#   ans <- mat
+#   ans[] <- vapply(ans, cumsum, FUN.VALUE = 1)
+#   ans
+# }
 
 # Use the data with this code
 set.seed(2315)
@@ -99,4 +111,28 @@ bench::mark(
 ```
 
 ## Function 3
-Find the column max (hint: Check out the function `{r} max.col()`)
+Find the column max (hint: Check out the function `max.col()`)
+
+```{r}
+#| eval: false
+# Data Generating Process (10 x 10,000 matrix)
+set.seed(1234)
+x <- matrix(rnorm(1e4), nrow = 10)
+
+# Find each column's max value
+fun2 <- function(x) {
+  apply(x, 2, max)
+}
+
+# My function
+fun2alt <- function(x) {
+  # Insert my code here
+}
+
+# Benchmarking
+bench::mark(
+  fun2(),
+  fun2alt(), relative = TRUE
+)
+
+```

@@ -33,7 +33,6 @@ fun1 <- function(n = 100, k = 4, lambda = 4){
 # my function
 fun1alt <- function(n = 100, k = 4, lambda = 4){
   x <- matrix(data = rpois(n * k, lambda = lambda),
-              nrow = n,
               ncol = k)
   return(x)
   
@@ -49,8 +48,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1()      17.1   22.5       1        62.8     3.03
-    2 fun1alt()    1      1        19.9       1       1   
+    1 fun1()      18.1   25.2       1        62.8     2.55
+    2 fun1alt()    1      1        21.9       1       1   
 
 ## Function 2
 
@@ -69,7 +68,7 @@ fun1 <- function(mat) {
 }
 
 fun1alt <- function(mat) {
-  # Insert code here
+  rowSums(mat)
 }
 
 
@@ -86,9 +85,22 @@ fun2 <- function(mat) {
   ans
 }
 
+
 fun2alt <- function(mat) {
-  # Insert code here
+  n <- nrow(mat)
+  ans <- mat
+  for (i in 1:n) {
+    ans[i,] <- cumsum(mat[i,])
+  }
+  ans
 }
+
+## Another function I'm trying to make faster
+# fun2alt <- function(mat) {
+#   ans <- mat
+#   ans[] <- vapply(ans, cumsum, FUN.VALUE = 1)
+#   ans
+# }
 
 # Use the data with this code
 set.seed(2315)
@@ -99,7 +111,15 @@ bench::mark(
   fun1(dat),
   fun1alt(dat), relative = TRUE
 )
+```
 
+    # A tibble: 2 × 6
+      expression     min median `itr/sec` mem_alloc `gc/sec`
+      <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
+    1 fun1(dat)     2.35   3.68      1         196.     8.50
+    2 fun1alt(dat)  1      1         3.68        1      1   
+
+``` r
 # Test for the second
 bench::mark(
   fun2(dat),
@@ -107,6 +127,34 @@ bench::mark(
 )
 ```
 
+    # A tibble: 2 × 6
+      expression     min median `itr/sec` mem_alloc `gc/sec`
+      <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
+    1 fun2(dat)     5.40   4.47      1         1         1  
+    2 fun2alt(dat)  1      1         4.10      3.48     15.2
+
 ## Function 3
 
-Find the column max (hint: Check out the function `{r} max.col()`)
+Find the column max (hint: Check out the function `max.col()`)
+
+``` r
+# Data Generating Process (10 x 10,000 matrix)
+set.seed(1234)
+x <- matrix(rnorm(1e4), nrow = 10)
+
+# Find each column's max value
+fun2 <- function(x) {
+  apply(x, 2, max)
+}
+
+# My function
+fun2alt <- function(x) {
+  # Insert my code here
+}
+
+# Benchmarking
+bench::mark(
+  fun2(),
+  fun2alt(), relative = TRUE
+)
+```
