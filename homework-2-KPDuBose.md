@@ -13,7 +13,7 @@ what you have learned about vectorization and Rcpp.
 
 # Part 1: Vectorizing code
 
-## First code chunk
+## Function 1
 
 This function generates a `n x k` dataset with all its entries
 distributed Poisson with mean `lambda`.
@@ -49,10 +49,10 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1()      16.6   21.8       1        62.8     2.71
-    2 fun1alt()    1      1        20.9       1       1   
+    1 fun1()      17.1   22.5       1        62.8     3.03
+    2 fun1alt()    1      1        19.9       1       1   
 
-## Second Function
+## Function 2
 
 Like before, speed up the following functions (it is OK to use
 StackOverflow)
@@ -106,3 +106,7 @@ bench::mark(
   fun2alt(dat), relative = TRUE
 )
 ```
+
+## Function 3
+
+Find the column max (hint: Check out the function `{r} max.col()`)

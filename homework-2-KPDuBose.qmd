@@ -14,7 +14,7 @@ For this assignment, you'll be quested with speeding up some code using what you
 
 # Part 1: Vectorizing code
 
-## First code chunk
+## Function 1
 This function generates a `n x k` dataset with all its entries distributed Poisson with mean `lambda`.
 ```{r}
 # function that was given
@@ -44,7 +44,7 @@ bench::mark(
 )
 ```
 
-## Second Function
+## Function 2
 Like before, speed up the following functions (it is OK to use StackOverflow)
 
 ```{r}
@@ -96,20 +96,7 @@ bench::mark(
   fun2(dat),
   fun2alt(dat), relative = TRUE
 )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```
+
+## Function 3
+Find the column max (hint: Check out the function `{r} max.col()`)
