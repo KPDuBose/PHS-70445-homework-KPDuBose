@@ -126,13 +126,13 @@ fun2 <- function(x) {
 
 # My function
 fun2alt <- function(x) {
-  # Insert my code here
+  x[cbind(max.col(t(x)), 1:ncol(x))]
 }
 
 # Benchmarking
 bench::mark(
-  fun2(),
-  fun2alt(), relative = TRUE
+  fun2(x),
+  fun2alt(x), relative = TRUE
 )
 
 ```

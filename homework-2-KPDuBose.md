@@ -48,8 +48,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1()      18.1   25.2       1        62.8     2.55
-    2 fun1alt()    1      1        21.9       1       1   
+    1 fun1()      16.8   22.1       1        62.8     2.75
+    2 fun1alt()    1      1        20.8       1       1   
 
 ## Function 2
 
@@ -116,8 +116,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1(dat)     2.35   3.68      1         196.     8.50
-    2 fun1alt(dat)  1      1         3.68        1      1   
+    1 fun1(dat)     6.36   3.06      1         196.     12.1
+    2 fun1alt(dat)  1      1         3.54        1       1  
 
 ``` r
 # Test for the second
@@ -130,8 +130,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun2(dat)     5.40   4.47      1         1         1  
-    2 fun2alt(dat)  1      1         4.10      3.48     15.2
+    1 fun2(dat)     5.18   4.39      1         1         1  
+    2 fun2alt(dat)  1      1         4.01      3.48     10.9
 
 ## Function 3
 
@@ -149,12 +149,12 @@ fun2 <- function(x) {
 
 # My function
 fun2alt <- function(x) {
-  # Insert my code here
+  x[cbind(max.col(t(x)), 1:ncol(x))]
 }
 
 # Benchmarking
 bench::mark(
-  fun2(),
-  fun2alt(), relative = TRUE
+  fun2(x),
+  fun2alt(x), relative = TRUE
 )
 ```
