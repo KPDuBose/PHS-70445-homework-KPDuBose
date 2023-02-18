@@ -48,8 +48,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1()      16.8   22.1       1        62.8     2.75
-    2 fun1alt()    1      1        20.8       1       1   
+    1 fun1()      19.4   23.2       1        62.8     2.53
+    2 fun1alt()    1      1        22.1       1       1   
 
 ## Function 2
 
@@ -116,8 +116,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1(dat)     6.36   3.06      1         196.     12.1
-    2 fun1alt(dat)  1      1         3.54        1       1  
+    1 fun1(dat)     2.81   3.10      1         196.     12.8
+    2 fun1alt(dat)  1      1         3.52        1       1  
 
 ``` r
 # Test for the second
@@ -130,8 +130,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun2(dat)     5.18   4.39      1         1         1  
-    2 fun2alt(dat)  1      1         4.01      3.48     10.9
+    1 fun2(dat)     5.23   4.42      1         1         1  
+    2 fun2alt(dat)  1      1         4.02      3.48     23.7
 
 ## Function 3
 
@@ -158,3 +158,9 @@ bench::mark(
   fun2alt(x), relative = TRUE
 )
 ```
+
+    # A tibble: 2 × 6
+      expression   min median `itr/sec` mem_alloc `gc/sec`
+      <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
+    1 fun2(x)     8.62   7.15      1         1        1.98
+    2 fun2alt(x)  1      1         7.23      1.20     1   
