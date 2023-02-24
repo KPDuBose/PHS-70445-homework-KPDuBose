@@ -48,8 +48,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1()      17.8   22.8       1        62.8     2.82
-    2 fun1alt()    1      1        21.0       1       1   
+    1 fun1()      17.6   23.0       1        62.8     2.80
+    2 fun1alt()    1      1        22.5       1       1   
 
 ## Function 2
 
@@ -116,8 +116,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1(dat)     2.77   3.20      1         196.     12.1
-    2 fun1alt(dat)  1      1         3.57        1       1  
+    1 fun1(dat)     2.76   3.95      1         196.      Inf
+    2 fun1alt(dat)  1      1         3.74        1       NaN
 
 ``` r
 # Test for the second
@@ -130,8 +130,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun2(dat)     5.31   4.36      1         1         1  
-    2 fun2alt(dat)  1      1         4.08      3.48     25.7
+    1 fun2(dat)     5.51   4.52      1         1         NaN
+    2 fun2alt(dat)  1      1         4.37      3.48      Inf
 
 ## Function 3
 
@@ -162,8 +162,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun2(x)     9.32   7.65      1         1        1.97
-    2 fun2alt(x)  1      1         7.56      1.20     1   
+    1 fun2(x)     9.33   7.86      1         1        1.95
+    2 fun2alt(x)  1      1         7.39      1.20     1   
 
 # Part 2: Rcpp code
 
@@ -176,13 +176,15 @@ like the following:
 
 ``` rcpp
 
-#include<Rcpp.h>
+#include <Rcpp.h>
+
+
 using namespace Rcpp;
 
-//[[Rcpp::export]]
+// [[Rcpp::export]]
 List psmatch(
-  NumericVector pscores,
-  LogicalVector is_treated
+    NumericVector pscores,
+    LogicalVector is_treated
 )
 {
   /*... setup the problem creating the output...*/
@@ -190,32 +192,86 @@ List psmatch(
   
   IntegerVector indices(n);
   NumericVector values(n);
-  values.fill(std::numeric_limits< double >::max());
   
- 
+  LogicalVector treatment = is_treated;
+  NumericVector treated;
+  NumericVector untreated;
+  
   /*
-  ... Implement your matching (start from Week 5's lab)... 
-  ... You have to consider that matches are done against groups, i.e.,
-      Treated (is_treated == true) must be matched to control 
-      (is_treated == false)  
-  */
+   ... Implement your matching (start from Week 5's lab)... 
+   ... You have to consider that matches are done against groups, i.e.,
+   Treated (is_treated == true) must be matched to control 
+   (is_treated == false)  
+   */
+for (int i = 0; i < n; i++){
   
-  for (int i = 0; i < n; ++1) {
+  if (treatment[i]){
     
-    double & cur_best = values[i];
-    auto & cur_i      = indices[i];
+    double cur_best = std::numeric_limits< double >::max(); 
+    auto & cur_i    = indices[i];
     
+    for (int j = 0; j < n; j++){
+      
+      if (!treatment[j]){
+        
+        double d = std::abs(pscores[i] - pscores[j]);
+        
+        if (d < cur_best){
+          
+          cur_best = d;
+          cur_i = j;
+          
+        }
+        if (d < values[j]) {
+        
+          values[j] = d;
+          indices[j] = i;
+      }
+      }
+    }
+  treated.push_back(i);
+  untreated.push_back(cur_i);
+  }
+  }
+
+int m = treated.size();
+NumericVector values1(m);
+
+int k = untreated.size();
+NumericVector values2(k);
+
+for (int i = 0; i < treated.size(); ++i) 
+  values1[i] = pscores[treated[i]];
+
+for (int i = 0; i < untreated.size(); ++i) 
+  values2[i] = pscores[untreated[i]];
+
+return List::create(
+  _["match_treated_id"] = treated + 1, // We add one to match R's indices
+  _["match_pscore_treated"]  = values1,
+  _["match_untreated_id"] = untreated + 1,
+  _["match_pscore_untreated"] = values2
+);
     
-    
-    
-    
-}
-  
-  
-  // Returning
-  return List::create(
-    _["match_id"] = /*...*/
-    _["match_pscore"] = /*...*/,
-  );
 }
 ```
+
+``` r
+set.seed(123)
+pscores <- runif(10)
+is_treated <- sample(c(0,1), 10, replace = TRUE)
+
+psmatch(pscores, is_treated)
+```
+
+    $match_treated_id
+    [1] 1 2 3 5 7
+
+    $match_pscore_treated
+    [1] 0.2875775 0.7883051 0.4089769 0.9404673 0.5281055
+
+    $match_untreated_id
+    [1] 10  4 10  8  9
+
+    $match_pscore_untreated
+    [1] 0.4566147 0.8830174 0.4566147 0.8924190 0.5514350

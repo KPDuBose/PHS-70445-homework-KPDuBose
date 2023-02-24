@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 
+
 using namespace Rcpp;
 
 // [[Rcpp::export]]
@@ -13,9 +14,10 @@ List psmatch(
   
   IntegerVector indices(n);
   NumericVector values(n);
-  values.fill(std::numeric_limits< double >::max());
   
-  
+  LogicalVector treatment = is_treated;
+  NumericVector treated;
+  NumericVector untreated;
   
   /*
    ... Implement your matching (start from Week 5's lab)... 
@@ -23,49 +25,74 @@ List psmatch(
    Treated (is_treated == true) must be matched to control 
    (is_treated == false)  
    */
+for (int i = 0; i < n; i++){
   
-  for (int i = 0; i < n; ++i) {
+  if (treatment[i]){
     
-    if (is_treated[i]){
+    double cur_best = std::numeric_limits< double >::max(); 
+    auto & cur_i    = indices[i];
+    
+    for (int j = 0; j < n; j++){
       
-      double & cur_best = values[i];
-      auto & cur_i      = indices[i];
-      
-      for (int j = 0; j < n; ++j) {
+      if (!treatment[j]){
         
-        if (!is_treated[j]){
-        // If it is lower, then update
         double d = std::abs(pscores[i] - pscores[j]);
-        if (d < cur_best) {
+        
+        if (d < cur_best){
           
           cur_best = d;
-          cur_i    = j;
-          
-        }
-
-        if (d < values[j]) {
-          
-          values[j] = d;
-          indices[j] = i;
+          cur_i = j;
           
         }
       
-    }
+        if (d < values[j]) {
+        
+          values[j] = d;
+          indices[j] = i;
+        
       }
+      
+      }
+      
+      
+      
     
+    
+    }
+  
+  
+  treated.push_back(i);
+  untreated.push_back(cur_i);
   }
+  
+}
+
+int m = treated.size();
+NumericVector values1(m);
+
+int k = untreated.size();
+NumericVector values2(k);
+
+
+for (int i = 0; i < treated.size(); ++i) 
+  values1[i] = pscores[treated[i]];
+
+for (int i = 0; i < untreated.size(); ++i) 
+  values2[i] = pscores[untreated[i]];
+
+
+
+
+
+return List::create(
+  _["match_treated_id"] = treated + 1, // We add one to match R's indices
+  _["match_pscore_treated"]  = values1,
+  _["match_untreated_id"] = untreated + 1,
+  _["match_pscore_untreated"] = values2
+);
     
-  for (int i = 0; i < n; ++i) 
-      values[i] = pscores[indices[i]];
-  
-  
-  // Returning
-  return List::create(
-    _["match_id"] = indices + 1,
-  _["match_pscore"] = values
-  );
 }
-}
+
 
 /*** R
 set.seed(123)
