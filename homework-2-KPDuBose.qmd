@@ -136,3 +136,56 @@ bench::mark(
 )
 
 ```
+
+# Part 2: Rcpp code
+
+As we saw in the Rcpp week, vectorization may not be the best solution. For this
+part, you must write a function using Rcpp that implements the propensity score
+matching algorithm. You can use [Week 5's lab](https://github.com/UofUEpiBio/PHS7045-advanced-programming/issues/8#issuecomment-1424974938) as a starting point for the problem. Your C++ file
+should look something like the following:
+
+```{Rcpp eval = FALSE}
+
+#include<Rcpp.h>
+using namespace Rcpp;
+
+//[[Rcpp::export]]
+List psmatch(
+  NumericVector pscores,
+  LogicalVector is_treated
+)
+{
+  /*... setup the problem creating the output...*/
+  int n = static_cast<int>(pscores.size());
+  
+  IntegerVector indices(n);
+  NumericVector values(n);
+  values.fill(std::numeric_limits< double >::max());
+  
+ 
+  /*
+  ... Implement your matching (start from Week 5's lab)... 
+  ... You have to consider that matches are done against groups, i.e.,
+      Treated (is_treated == true) must be matched to control 
+      (is_treated == false)  
+  */
+  
+  for (int i = 0; i < n; ++1) {
+    
+    double & cur_best = values[i];
+    auto & cur_i      = indices[i];
+    
+    
+    
+    
+    
+}
+  
+  
+  // Returning
+  return List::create(
+    _["match_id"] = /*...*/
+    _["match_pscore"] = /*...*/,
+  );
+}
+```
