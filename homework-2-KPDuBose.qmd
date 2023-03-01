@@ -173,8 +173,8 @@ List psmatch(
    Treated (is_treated == true) must be matched to control 
    (is_treated == false)  
    */
-for (int i = 0; i < n; i++){
-  
+for (int i = 0; i < n; i++){     /* This matches someone in the treatment group to one person 
+                                    in the control group*/
   if (treatment[i]){
     
     double cur_best = std::numeric_limits< double >::max(); 
@@ -204,11 +204,9 @@ for (int i = 0; i < n; i++){
   }
   }
 
-int m = treated.size();
-NumericVector values1(m);
+NumericVector values1(treated.size());
 
-int k = untreated.size();
-NumericVector values2(k);
+NumericVector values2(untreated.size());
 
 for (int i = 0; i < treated.size(); ++i) 
   values1[i] = pscores[treated[i]];
@@ -216,10 +214,11 @@ for (int i = 0; i < treated.size(); ++i)
 for (int i = 0; i < untreated.size(); ++i) 
   values2[i] = pscores[untreated[i]];
 
-return List::create(
+return List::create(/*Returns the ID's of the treated group, the matched control
+                      group, and the p-values of each respective patient*/
   _["match_treated_id"] = treated + 1, // We add one to match R's indices
-  _["match_pscore_treated"]  = values1,
   _["match_untreated_id"] = untreated + 1,
+  _["match_pscore_treated"]  = values1,
   _["match_pscore_untreated"] = values2
 );
     
@@ -229,8 +228,8 @@ return List::create(
 
 ```{r}
 set.seed(123)
-pscores <- runif(10)
-is_treated <- sample(c(0,1), 10, replace = TRUE)
+pscores <- runif(30)
+is_treated <- sample(c(0,1), 30, replace = TRUE)
 
 psmatch(pscores, is_treated)
 ```

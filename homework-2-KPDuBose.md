@@ -48,8 +48,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1()      17.6   23.0       1        62.8     2.80
-    2 fun1alt()    1      1        22.5       1       1   
+    1 fun1()      17.3   23.7       1        62.8     2.90
+    2 fun1alt()    1      1        20.6       1       1   
 
 ## Function 2
 
@@ -116,8 +116,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun1(dat)     2.76   3.95      1         196.      Inf
-    2 fun1alt(dat)  1      1         3.74        1       NaN
+    1 fun1(dat)     6.47   3.94      1         196.      Inf
+    2 fun1alt(dat)  1      1         3.73        1       NaN
 
 ``` r
 # Test for the second
@@ -130,8 +130,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression     min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr>   <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun2(dat)     5.51   4.52      1         1         NaN
-    2 fun2alt(dat)  1      1         4.37      3.48      Inf
+    1 fun2(dat)     5.72   4.44      1         1         NaN
+    2 fun2alt(dat)  1      1         4.08      3.48      Inf
 
 ## Function 3
 
@@ -162,8 +162,8 @@ bench::mark(
     # A tibble: 2 × 6
       expression   min median `itr/sec` mem_alloc `gc/sec`
       <bch:expr> <dbl>  <dbl>     <dbl>     <dbl>    <dbl>
-    1 fun2(x)     9.33   7.86      1         1        1.95
-    2 fun2alt(x)  1      1         7.39      1.20     1   
+    1 fun2(x)     9.26   8.03      1         1        2.19
+    2 fun2alt(x)  1      1         7.45      1.20     1   
 
 # Part 2: Rcpp code
 
@@ -203,8 +203,8 @@ List psmatch(
    Treated (is_treated == true) must be matched to control 
    (is_treated == false)  
    */
-for (int i = 0; i < n; i++){
-  
+for (int i = 0; i < n; i++){     /* This matches someone in the treatment group to one person 
+                                    in the control group*/
   if (treatment[i]){
     
     double cur_best = std::numeric_limits< double >::max(); 
@@ -234,11 +234,9 @@ for (int i = 0; i < n; i++){
   }
   }
 
-int m = treated.size();
-NumericVector values1(m);
+NumericVector values1(treated.size());
 
-int k = untreated.size();
-NumericVector values2(k);
+NumericVector values2(untreated.size());
 
 for (int i = 0; i < treated.size(); ++i) 
   values1[i] = pscores[treated[i]];
@@ -246,10 +244,11 @@ for (int i = 0; i < treated.size(); ++i)
 for (int i = 0; i < untreated.size(); ++i) 
   values2[i] = pscores[untreated[i]];
 
-return List::create(
+return List::create(/*Returns the ID's of the treated group, the matched control
+                      group, and the p-values of each respective patient*/
   _["match_treated_id"] = treated + 1, // We add one to match R's indices
-  _["match_pscore_treated"]  = values1,
   _["match_untreated_id"] = untreated + 1,
+  _["match_pscore_treated"]  = values1,
   _["match_pscore_untreated"] = values2
 );
     
@@ -258,20 +257,22 @@ return List::create(
 
 ``` r
 set.seed(123)
-pscores <- runif(10)
-is_treated <- sample(c(0,1), 10, replace = TRUE)
+pscores <- runif(30)
+is_treated <- sample(c(0,1), 30, replace = TRUE)
 
 psmatch(pscores, is_treated)
 ```
 
     $match_treated_id
-    [1] 1 2 3 5 7
-
-    $match_pscore_treated
-    [1] 0.2875775 0.7883051 0.4089769 0.9404673 0.5281055
+     [1]  2  4  5 10 12 13 18 21 26 27 29
 
     $match_untreated_id
-    [1] 10  4 10  8  9
+     [1] 22  8 20  3  3 22  6  8 22  9  1
+
+    $match_pscore_treated
+     [1] 0.78830514 0.88301740 0.94046728 0.45661474 0.45333416 0.67757064
+     [7] 0.04205953 0.88953932 0.70853047 0.54406602 0.28915974
 
     $match_pscore_untreated
-    [1] 0.4566147 0.8830174 0.4566147 0.8924190 0.5514350
+     [1] 0.6928034 0.8924190 0.9545036 0.4089769 0.4089769 0.6928034 0.0455565
+     [8] 0.8924190 0.6928034 0.5514350 0.2875775
