@@ -1,0 +1,150 @@
+---
+title: "partyGames"
+subtitle: "A simulation package for PHS 7045"
+author: "Kline DuBose"
+format:
+  revealjs:
+    embed-resources: true
+    slide-number: true
+    scrollable: true
+---
+
+```{r}
+#| echo: false
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(eval = TRUE, fig.width = 7, fig.height = 5)
+slides_eval <- TRUE
+library(partyGames)
+```
+
+## Introduction
+
+The purpose of this package is to simulate various types of games of chance.
+
+For this project, I mainly focused on the "White Elephant"/ Party Present game.
+
+## Game Explanation
+
+The present starts in position 1 and moves around the circle based on dice.
+
+![White Elephant Example](white-elephant-example.png)
+
+## Coin Example
+
+The basic function run once is call`leftRightElephant`. It asks for the number of people playing and the probability of heads on a coin flip.
+
+. . .
+
+```{r}
+#| echo: true
+#| label: leftRightElephant
+leftRightElephant(15, 0.5) # Fair Coin
+```
+
+Negative numbers indicate the present moving to the left and positive numbers indicate the present moving to the right
+. . .
+
+```{r}
+#| echo: true
+leftRightElephant(15, 0.7) # Unfair Coin
+```
+
+## Two - Coin Example
+
+It also simulates a variation of the game using two coins in a function called `twoCoinElephant`
+
+```{r}
+#| echo: true
+twoCoinElephant(15, 0.3, 0.7)
+```
+
+## Dice Example
+
+Another variation uses dice.
+
+```{r}
+#| echo: true
+
+dieElephant(15, 6, 1) # One six-sided dice
+
+dieElephant(15, 4, 2) # Sum of two four-sided dice
+```
+
+## Other Functions
+
+Other variations on the game include a combination of:
+
+1. Using one coin and dice
+
+2. Using two coins and dice
+
+```{r}
+#| echo: true
+
+lrDieElephant(15, 0.5, 6, 2) # One fair coin, two six-sided dice
+
+twoCoinDieElephant(15, 0.3, 0.7, 20, 1) # Two unfair coins, one twenty-sided dice
+```
+
+## Simulation
+
+The package can also simulate many instances of the game using `simulateElephant` and summarizes them using `summaryElephant`.
+
+```{r}
+#| echo: true
+#| label: simulation
+#| cache: true
+
+# 1500 games with 15 people in it. 
+#One fair coin, one unfair coin. 
+#Two six-sided dice.
+games <- simulateElephant(15, dice = TRUE, coins = 2,   
+                 pheads = 0.5, pheads2 = 0.7,          
+                 iter = 1500,                          
+                 sides = 6, numDice = 2)
+class(games)
+```
+
+## Simulation (cont.)
+```{r}
+#| echo: true
+# Returns two tables with counts of which seat won and number of times
+# Each move was made
+games.summary <- summaryElephant(games)
+games.summary
+```
+
+## Barplot
+
+The function `plotElephant` displays a barplot showing the distribution of the winning barplot.
+
+```{r}
+#| echo: true
+plotElephant(games) # Using "elphList"
+```
+
+## Barplot (cont.)
+```{r}
+#| echo: true
+plotElephant(games.summary) # Using "elphSum"
+```
+
+# End
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
