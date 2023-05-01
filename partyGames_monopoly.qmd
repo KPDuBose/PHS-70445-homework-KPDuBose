@@ -1,0 +1,123 @@
+---
+title: "partyGames - Monopoly Functions"
+subtitle: "A simulation package for PHS 7045"
+author: "Kline DuBose"
+format:
+  revealjs:
+    embed-resources: true
+    slide-number: true
+    scrollable: true
+---
+
+```{r}
+#| echo: false
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(eval = TRUE, fig.width = 7, fig.height = 5)
+slides_eval <- TRUE
+library(partyGames)
+```
+
+## Introduction
+
+In order to get practice with the Rcpp::Armadillo package and attempt to implement Open MP into the package, there are three new functions and two new S3 methods that I have added to the package
+
+## Explanation
+
+Monopoly is one of my favorite games. After the midterm, I knew I wanted to add a simulation for Monopoly to see which spaces are landed on over multiple games. I also found Open MP to be pretty interesting and wanted to get a chance to understand using it better.
+
+## Explanation (pt.2)
+
+The board is based on the 2008 Monopoly board. 
+
+![Monopoly Board](monopoly08_board.png)
+
+## Explanation (pt. 3)
+
+The Chance and Community Chest cards are also from the 2008 US version of the game.
+
+::: {#fig-elephants layout-ncol=2}
+
+![Chance](chance08.png){#fig-chance}
+
+![Community](community08.png){#fig-community}
+
+List of Community Chest cards and Chance cards used.
+:::
+
+# New Functions
+## diceRoll
+
+One of the new functions that was added was a dice rolling function that rolls multiple dice and returns a vector representing the dice that were rolled.
+
+```{r}
+#| echo: true
+# Two six sided dice
+diceRoll(6, 2)
+
+# Three 100 sided dice
+diceRoll(100, 3)
+
+# Five six sided dice (like yahtzee)
+diceRoll(6, 5)
+```
+
+## monopoly
+
+This function simulates a single-player version of monopoly to and returns a vector of integers that represents how many times each space was landed on during the game. 
+
+```{r}
+#| echo: true
+monopoly(500, 6, 2)
+
+monopoly(500, 20, 2)
+```
+
+## simulateMonopoly
+
+This function simulates multiple single-player versions of the game and returns a list of class "monopoly" where each entry in the list is a vector representing a single game. This doesn't parallelize the code like I'm hoping it would and is subject to change. 
+
+```{r}
+#| echo: true
+monoGame <- simulateMonopoly(10, 500, 6, 2, 1)
+monoGame
+```
+
+## summarize.monopoly
+
+This is the S3 method for monopoly class objects. It returns a numeric vector of class "monoSum" that represents how many times each space was landed on over the coure of the various games. 
+
+```{r}
+#| echo: true
+summary.monopoly(monoGame)
+```
+
+## plot.monopoly
+
+This is the S3 method for monopoly and monoSum class objects. It returns a barplot showing which space was landed on the most.
+
+```{r}
+#| echo: true
+#| fig-align: center
+#| fig-width: 8
+plot.monopoly(monoGame)
+```
+
+## Conclusion
+
+This was a fun chance to learn how OpenMP functions and RcppArmadillo as well. Though the parallelization doesn't always work, I feel like I have a better understanding the requirements to use OpenMP and other libraries used in C++.
+
+# Questions
+
+## Sources
+
+For the Cards:
+https://www.monopolyland.com/list-monopoly-chance-community-chest-cards/
+
+For the Board:
+https://monopoly.fandom.com/wiki/Monopoly_Board
+
+Special Thanks to George Vega Yon and Jonathan Chipman
+
+See also:
+https://github.com/UofUEpiBio/PHS7045-advanced-programming/tree/main/projects/04-monopoly-game
