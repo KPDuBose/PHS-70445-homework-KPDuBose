@@ -1,6 +1,6 @@
 ---
 title: "partyGames - Monopoly Functions"
-subtitle: "A simulation package for PHS 7045"
+subtitle: "Improvements using RcppArmadillo and Open MP"
 author: "Kline DuBose"
 format:
   revealjs:
